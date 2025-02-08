@@ -1,4 +1,5 @@
 entrypoint = "main.py"
+run = "bash"              # Добавляем эту строку здесь
 modules = ["python-3.11"]
 
 [nix]
@@ -11,5 +12,5 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["python3", "main.py"]
+run = "bash"
 deploymentTarget = "cloudrun"

@@ -68,6 +68,18 @@ def show_checklists(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
 
+# Переключение статуса выполнения задачи
+def toggle_task(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = str(query.from_user.id)
+    idx = int(query.data.split('_')[1])
+    checklist_name = context.user_data['current_checklist']
+    
+    data[user_id]['checklists'][checklist_name][idx]['done'] = not data[user_id]['checklists'][checklist_name][idx]['done']
+    save_data(data)
+    show_tasks(query, user_id, checklist_name)
+
 
 # Создание нового чек-листа
 def create_checklist(update: Update, context: CallbackContext):

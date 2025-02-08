@@ -123,6 +123,25 @@ def show_checklists(update: Update, context: CallbackContext):
     else:
         update.message.reply_text(
             "У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
+# Обработчик нажатий кнопок
+def button(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = str(query.from_user.id)
+    if query.data.startswith('edit_'):
+        checklist_name = query.data.split('_', 1)[1]
+        context.user_data['editing'] = True
+        context.user_data['current_checklist'] = checklist_name
+        update_edit_menu(query, user_id, checklist_name)
+    else:
+        checklist_name = query.data.split('_', 1)[1]
+        context.user_data['current_checklist'] = checklist_name
+        show_tasks(query, user_id, checklist_name)
+
+# Основная функция запуска бота
+def main():
+    dp = updater.dispatcher
+    ...
 
 
 # Основная функция запуска бота

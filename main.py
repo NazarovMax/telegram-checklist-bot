@@ -51,7 +51,7 @@ def start(update: Update, context: CallbackContext):
     menu_keyboard = [[
         KeyboardButton("📝 Создать чек-лист"),
         KeyboardButton("📋 Мои чек-листы")
-    ], [KeyboardButton("✏️ Редактировать чек-лист")]]
+    ], [KeyboardButton("✏️ Редактировать чек-лист")], [KeyboardButton("🗑 Удалить чек-лист")]]
     reply_markup = ReplyKeyboardMarkup(menu_keyboard, resize_keyboard=True)
     update.message.reply_text(
         f"Привет, {data[user_id]['name']}! Готов помочь с чек-листами. Выбери команду из меню ниже:",
@@ -74,6 +74,20 @@ def edit_checklist(update: Update, context: CallbackContext):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("Выбери чек-лист для редактирования:",
                                   reply_markup=reply_markup)
+    else:
+        update.message.reply_text(
+            "У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
+
+
+# Удаление чек-листа
+def delete_checklist(update: Update, context: CallbackContext):
+    user_id = str(update.message.from_user.id)
+    checklists = data[user_id]['checklists']
+    if checklists:
+        keyboard = [[InlineKeyboardButton(name, callback_data=f'delete_{name}')]
+                    for name in checklists]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text("Выбери чек-лист для удаления:", reply_markup=reply_markup)
     else:
         update.message.reply_text(
             "У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
@@ -109,85 +123,24 @@ def handle_message(update: Update, context: CallbackContext):
                 f"Добавлено: {task}. Добавь ещё или напиши /done.")
 
 
-# Показать чек-листы пользователя
-def show_checklists(update: Update, context: CallbackContext):
-    user_id = str(update.message.from_user.id)
-    checklists = data[user_id]['checklists']
-    if checklists:
-        keyboard = [[
-            InlineKeyboardButton(name, callback_data=f'start_{name}')
-        ] for name in checklists]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text("Вот твои чек-листы:",
-                                  reply_markup=reply_markup)
-    else:
-        update.message.reply_text(
-            "У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
-# Переключение статуса выполнения задачи
-def toggle_task(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    user_id = str(query.from_user.id)
-    idx = int(query.data.split('_')[1])
-    checklist_name = context.user_data['current_checklist']
-    data[user_id]['checklists'][checklist_name][idx]['done'] = not data[user_id]['checklists'][checklist_name][idx]['done']
-    save_data(data)
-    show_tasks(query, user_id, checklist_name)
-
-# Завершение чек-листа
-def finish_checklist(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    user_id = str(query.from_user.id)
-    checklist_name = context.user_data['current_checklist']
-    tasks = data[user_id]['checklists'][checklist_name]
-    
-    text = f"✅ Чек-лист '{checklist_name}' завершён!\n\n"
-    for task in tasks:
-        status = '✅' if task['done'] else '❌'
-        text += f"{status} {task['task']}\n"
-    
-    query.edit_message_text(text)
-
-# Редактирование задач чек-листа
-def edit_task(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    user_id = str(query.from_user.id)
-    checklist_name = context.user_data['current_checklist']
-
-    if query.data.startswith('delete_'):
-        idx = int(query.data.split('_')[1])
-        del data[user_id]['checklists'][checklist_name][idx]
-        save_data(data)
-        update_edit_menu(query, user_id, checklist_name)
-
-    elif query.data == 'add_task':
-        context.user_data['adding_tasks'] = True
-        query.edit_message_text(
-            f"Напиши новую задачу для чек-листа '{checklist_name}'.")
-
-    elif query.data == 'finish_edit':
-        context.user_data['editing'] = False
-        query.edit_message_text(
-            f"Редактирование чек-листа '{checklist_name}' завершено.")
-# Обновление меню редактирования чек-листа
-def update_edit_menu(query, user_id, checklist_name):
+# Показать задачи чек-листа
+def show_tasks(query, user_id, checklist_name):
     tasks = data[user_id]['checklists'][checklist_name]
     keyboard = []
-    text = f"Редактирование чек-листа: {checklist_name}\n\n"
+    text = f"Чек-лист: {checklist_name}\n\n"
     for idx, task in enumerate(tasks):
-        text += f"{task['task']}\n"
+        status = '✅' if task['done'] else '⬜'
+        text += f"{status} {task['task']}\n"
         keyboard.append([
-            InlineKeyboardButton(f"Удалить: {task['task']}", callback_data=f'delete_{idx}')
+            InlineKeyboardButton(f"{status} {task['task']}", callback_data=f'toggle_{idx}')
         ])
-    keyboard.append([InlineKeyboardButton("Добавить задачу", callback_data='add_task')])
-    keyboard.append([InlineKeyboardButton("Готово", callback_data='finish_edit')])
+    keyboard.append([InlineKeyboardButton("Вышел", callback_data='finish')])
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(text, reply_markup=reply_markup)
 
 
-# Обработчик нажатий кнопок
+# Обработка кнопок
+
 def button(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
@@ -197,15 +150,15 @@ def button(update: Update, context: CallbackContext):
         context.user_data['editing'] = True
         context.user_data['current_checklist'] = checklist_name
         update_edit_menu(query, user_id, checklist_name)
+    elif query.data.startswith('delete_'):
+        checklist_name = query.data.split('_', 1)[1]
+        del data[user_id]['checklists'][checklist_name]
+        save_data(data)
+        query.edit_message_text(f"Чек-лист '{checklist_name}' удалён.")
     else:
         checklist_name = query.data.split('_', 1)[1]
         context.user_data['current_checklist'] = checklist_name
         show_tasks(query, user_id, checklist_name)
-
-# Основная функция запуска бота
-def main():
-    dp = updater.dispatcher
-    ...
 
 
 # Основная функция запуска бота
@@ -216,7 +169,8 @@ def main():
     dp.add_handler(MessageHandler(Filters.regex("^📝 Создать чек-лист$"), create_checklist))
     dp.add_handler(MessageHandler(Filters.regex("^📋 Мои чек-листы$"), show_checklists))
     dp.add_handler(MessageHandler(Filters.regex("^✏️ Редактировать чек-лист$"), edit_checklist))
-    dp.add_handler(CallbackQueryHandler(button, pattern=r'start_.*|edit_.*'))
+    dp.add_handler(MessageHandler(Filters.regex("^🗑 Удалить чек-лист$"), delete_checklist))
+    dp.add_handler(CallbackQueryHandler(button, pattern=r'start_.*|edit_.*|delete_.*'))
     dp.add_handler(CallbackQueryHandler(toggle_task, pattern=r'toggle_.*'))
     dp.add_handler(CallbackQueryHandler(finish_checklist, pattern=r'finish'))
     dp.add_handler(CallbackQueryHandler(edit_task, pattern=r'delete_.*|add_task|finish_edit'))

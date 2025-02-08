@@ -149,6 +149,43 @@ def finish_checklist(update: Update, context: CallbackContext):
     
     query.edit_message_text(text)
 
+# Редактирование задач чек-листа
+def edit_task(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = str(query.from_user.id)
+    checklist_name = context.user_data['current_checklist']
+
+    if query.data.startswith('delete_'):
+        idx = int(query.data.split('_')[1])
+        del data[user_id]['checklists'][checklist_name][idx]
+        save_data(data)
+        update_edit_menu(query, user_id, checklist_name)
+
+    elif query.data == 'add_task':
+        context.user_data['adding_tasks'] = True
+        query.edit_message_text(
+            f"Напиши новую задачу для чек-листа '{checklist_name}'.")
+
+    elif query.data == 'finish_edit':
+        context.user_data['editing'] = False
+        query.edit_message_text(
+            f"Редактирование чек-листа '{checklist_name}' завершено.")
+# Обновление меню редактирования чек-листа
+def update_edit_menu(query, user_id, checklist_name):
+    tasks = data[user_id]['checklists'][checklist_name]
+    keyboard = []
+    text = f"Редактирование чек-листа: {checklist_name}\n\n"
+    for idx, task in enumerate(tasks):
+        text += f"{task['task']}\n"
+        keyboard.append([
+            InlineKeyboardButton(f"Удалить: {task['task']}", callback_data=f'delete_{idx}')
+        ])
+    keyboard.append([InlineKeyboardButton("Добавить задачу", callback_data='add_task')])
+    keyboard.append([InlineKeyboardButton("Готово", callback_data='finish_edit')])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    query.edit_message_text(text, reply_markup=reply_markup)
+
 
 # Обработчик нажатий кнопок
 def button(update: Update, context: CallbackContext):

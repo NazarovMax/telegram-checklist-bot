@@ -56,6 +56,17 @@ def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         f"Привет, {data[user_id]['name']}! Готов помочь с чек-листами. Выбери команду из меню ниже:",
         reply_markup=reply_markup)
+    
+# Показать чек-листы пользователя
+def show_checklists(update: Update, context: CallbackContext):
+    user_id = str(update.message.from_user.id)
+    checklists = data[user_id]['checklists']
+    if checklists:
+        keyboard = [[InlineKeyboardButton(name, callback_data=f'start_{name}')] for name in checklists]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text("Вот твои чек-листы:", reply_markup=reply_markup)
+    else:
+        update.message.reply_text("У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
 
 
 # Создание нового чек-листа

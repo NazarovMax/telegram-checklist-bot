@@ -80,6 +80,30 @@ def toggle_task(update: Update, context: CallbackContext):
     save_data(data)
     show_tasks(query, user_id, checklist_name)
 
+# Редактирование задач чек-листа
+def edit_task(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = str(query.from_user.id)
+    checklist_name = context.user_data['current_checklist']
+
+    if query.data.startswith('delete_'):
+        idx = int(query.data.split('_')[1])
+        del data[user_id]['checklists'][checklist_name][idx]
+        save_data(data)
+        update_edit_menu(query, user_id, checklist_name)
+
+    elif query.data == 'add_task':
+        context.user_data['adding_tasks'] = True
+        query.edit_message_text(
+            f"Напиши новую задачу для чек-листа '{checklist_name}'.")
+
+    elif query.data == 'finish_edit':
+        context.user_data['editing'] = False
+        query.edit_message_text(
+            f"Редактирование чек-листа '{checklist_name}' завершено.")
+
+
 # Завершение чек-листа
 def finish_checklist(update: Update, context: CallbackContext):
     query = update.callback_query

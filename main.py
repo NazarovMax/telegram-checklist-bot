@@ -134,6 +134,21 @@ def toggle_task(update: Update, context: CallbackContext):
     save_data(data)
     show_tasks(query, user_id, checklist_name)
 
+# Завершение чек-листа
+def finish_checklist(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = str(query.from_user.id)
+    checklist_name = context.user_data['current_checklist']
+    tasks = data[user_id]['checklists'][checklist_name]
+    
+    text = f"✅ Чек-лист '{checklist_name}' завершён!\n\n"
+    for task in tasks:
+        status = '✅' if task['done'] else '❌'
+        text += f"{status} {task['task']}\n"
+    
+    query.edit_message_text(text)
+
 
 # Обработчик нажатий кнопок
 def button(update: Update, context: CallbackContext):

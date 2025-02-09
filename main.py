@@ -227,7 +227,7 @@ def handle_message(update: Update, context: CallbackContext):
 
 # Основная функция запуска бота
 def main():
-    dp = updater.dispatche
+    dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.regex("^📝 Создать чек-лист$"), create_checklist))

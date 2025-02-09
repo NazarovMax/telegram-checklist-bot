@@ -99,9 +99,9 @@ def edit_checklist(update: Update, context: CallbackContext):
 
 # Создание нового чек-листа
 def create_checklist(update: Update, context: CallbackContext):
-    user_id = str(update.message.from_user.id)
+    context.user_data['creating_checklist'] = True  # Устанавливаем флаг
     update.message.reply_text("Как назовем чек-лист?")
-    context.user_data['creating_checklist'] = True
+
     
 def button(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -195,8 +195,22 @@ def finish_checklist(update: Update, context: CallbackContext):
     query.edit_message_text(result)
     
 def handle_message(update: Update, context: CallbackContext):
-    user_message = update.message.text
-    update.message.reply_text(f"Ты написал: {user_message}")
+    user_id = str(update.message.from_user.id)
+    text = update.message.text
+    
+    # Проверка на создание чек-листа
+    if context.user_data.get('creating_checklist'):
+        checklist_name = text
+        if user_id not in data:
+            data[user_id] = {'checklists': {}}
+        data[user_id]['checklists'][checklist_name] = []
+        save_data(data)
+        context.user_data['creating_checklist'] = False  # Сбрасываем состояние
+        update.message.reply_text(f"Чек-лист '{checklist_name}' создан!")
+        return
+
+    # Если бот не в режиме создания чек-листа, отвечаем по умолчанию
+    update.message.reply_text(f"Ты написал: {text}")
 
 
 # Основная функция запуска бота

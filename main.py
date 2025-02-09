@@ -20,6 +20,8 @@ updater = Updater(bot_token, use_context=True)
 
 data_file = 'data.json'
 
+print("Бот начинает polling...", flush=True)
+
 
 # Загрузка данных пользователей
 def load_data():
@@ -246,6 +248,9 @@ def main():
         print(f"Ошибка сети: {e}")
     except Exception as e:
         print(f"Произошла ошибка: {e}")
+
+    print("Polling завершён.", flush=True)
+
 
     updater.idle()
 

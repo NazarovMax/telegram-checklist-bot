@@ -198,18 +198,25 @@ def handle_message(update: Update, context: CallbackContext):
     user_id = str(update.message.from_user.id)
     text = update.message.text
     
-    # Проверка на создание чек-листа
+   # Проверка на создание чек-листа
     if context.user_data.get('creating_checklist'):
         checklist_name = text
         if user_id not in data:
             data[user_id] = {'checklists': {}}
         data[user_id]['checklists'][checklist_name] = []
         save_data(data)
-        context.user_data['creating_checklist'] = False  # Сбрасываем состояние
-        update.message.reply_text(f"Чек-лист '{checklist_name}' создан!")
+        context.user_data['creating_checklist'] = False
+        context.user_data['current_checklist'] = checklist_name  # Сохраняем текущий чек-лист
+        update.message.reply_text(f"Чек-лист '{checklist_name}' создан! Теперь добавь задачи.")
+        context.user_data['adding_task'] = True  # Переходим к добавлению задач
         return
 
-    # Если бот не в режиме создания чек-листа, отвечаем по умолчанию
+    # Проверка на добавление задачи
+    if context.user_data.get('adding_task'):
+        add_task(update, context)
+        return
+
+    # Если бот не в режиме создания чек-листа или добавления задач
     update.message.reply_text(f"Ты написал: {text}")
 
 

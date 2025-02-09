@@ -34,6 +34,13 @@ def load_data():
             return json.load(file)
     return {}
 
+# Создание нового чек-листа
+def create_checklist(update: Update, context: CallbackContext):
+    user_id = str(update.message.from_user.id)
+    update.message.reply_text("Как назовем чек-лист?")
+    context.user_data['creating_checklist'] = True
+
+
 # Сохранение данных пользователей
 def save_data(data):
     with open(data_file, 'w') as file:

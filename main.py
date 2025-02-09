@@ -5,57 +5,20 @@ from dotenv import load_dotenv
 import os
 import json
 
-# Загружаем переменные окружения (нужно только для локальной работы)
+# Загружаем переменные окружения
 load_dotenv()
 
 print("Скрипт запущен", flush=True)
+bot_token = os.getenv("BOT_TOKEN")
+print(f"Жестко заданный токен: {bot_token}", flush=True)
 
-# Получаем токен из переменной окружения
-bot_token = os.getenv('BOT_TOKEN')
-PORT = os.getenv("PORT", 10000)
-
-def main():
-    dp = updater.dispatcher
-
-    # Удаление Webhook перед запуском polling
-    updater.bot.delete_webhook(drop_pending_updates=True)
-    
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.regex("^📝 Создать чек-лист$"), create_checklist))
-    dp.add_handler(MessageHandler(Filters.regex("^📋 Мои чек-листы$"), show_checklists))
-    dp.add_handler(MessageHandler(Filters.regex("^✏️ Редактировать чек-лист$"), edit_checklist))
-    dp.add_handler(MessageHandler(Filters.regex("^🗑 Удалить чек-лист$"), delete_checklist))
-    dp.add_handler(CallbackQueryHandler(button, pattern=r'start_.*|edit_.*|delete_.*'))
-    dp.add_handler(CallbackQueryHandler(toggle_task, pattern=r'toggle_.*'))
-    dp.add_handler(CallbackQueryHandler(finish_checklist, pattern=r'finish'))
-    dp.add_handler(CallbackQueryHandler(edit_task, pattern=r'delete_.*|add_task|finish_edit'))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
-
-    print("Попытка запуска бота...")
-    try:
-        updater.start_polling()
-        print("Бот запущен и подключён к Telegram API.")
-    except NetworkError as e:
-        print(f"Ошибка сети: {e}")
-    except Exception as e:
-        print(f"Произошла ошибка: {e}")
-
-    print("Polling завершён.", flush=True)
-
-    updater.idle()
-
-# Проверяем наличие токена
 if not bot_token:
-    print("Ошибка: Токен не найден в .env файле или переменных окружения!", flush=True)
-else:
-    print(f"Токен успешно загружен: {bot_token}", flush=True)
+    print("Ошибка: Токен не найден в .env файле!", flush=True)
 
 # Инициализация токена
 updater = Updater(bot_token, use_context=True)
 
 data_file = 'data.json'
-
-print("Бот начинает polling...", flush=True)
 
 
 # Загрузка данных пользователей
@@ -93,68 +56,6 @@ def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         f"Привет, {data[user_id]['name']}! Готов помочь с чек-листами. Выбери команду из меню ниже:",
         reply_markup=reply_markup)
-    
-# Показать чек-листы пользователя
-def show_checklists(update: Update, context: CallbackContext):
-    user_id = str(update.message.from_user.id)
-    checklists = data[user_id]['checklists']
-    if checklists:
-        keyboard = [[InlineKeyboardButton(name, callback_data=f'start_{name}')] for name in checklists]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text("Вот твои чек-листы:", reply_markup=reply_markup)
-    else:
-        update.message.reply_text("У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
-
-# Переключение статуса выполнения задачи
-def toggle_task(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    user_id = str(query.from_user.id)
-    idx = int(query.data.split('_')[1])
-    checklist_name = context.user_data['current_checklist']
-    
-    data[user_id]['checklists'][checklist_name][idx]['done'] = not data[user_id]['checklists'][checklist_name][idx]['done']
-    save_data(data)
-    show_tasks(query, user_id, checklist_name)
-
-# Редактирование задач чек-листа
-def edit_task(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    user_id = str(query.from_user.id)
-    checklist_name = context.user_data['current_checklist']
-
-    if query.data.startswith('delete_'):
-        idx = int(query.data.split('_')[1])
-        del data[user_id]['checklists'][checklist_name][idx]
-        save_data(data)
-        update_edit_menu(query, user_id, checklist_name)
-
-    elif query.data == 'add_task':
-        context.user_data['adding_tasks'] = True
-        query.edit_message_text(
-            f"Напиши новую задачу для чек-листа '{checklist_name}'.")
-
-    elif query.data == 'finish_edit':
-        context.user_data['editing'] = False
-        query.edit_message_text(
-            f"Редактирование чек-листа '{checklist_name}' завершено.")
-
-
-# Завершение чек-листа
-def finish_checklist(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    user_id = str(query.from_user.id)
-    checklist_name = context.user_data['current_checklist']
-    tasks = data[user_id]['checklists'][checklist_name]
-    
-    text = f"✅ Чек-лист '{checklist_name}' завершён!\n\n"
-    for task in tasks:
-        status = '✅' if task['done'] else '❌'
-        text += f"{status} {task['task']}\n"
-    
-    query.edit_message_text(text)
 
 
 # Создание нового чек-листа
@@ -283,9 +184,6 @@ def main():
         print(f"Ошибка сети: {e}")
     except Exception as e:
         print(f"Произошла ошибка: {e}")
-
-    print("Polling завершён.", flush=True)
-
 
     updater.idle()
 

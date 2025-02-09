@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, Bot
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
 from telegram.error import NetworkError
 from dotenv import load_dotenv
@@ -222,10 +222,7 @@ def handle_message(update: Update, context: CallbackContext):
 
 # Основная функция запуска бота
 def main():
-    dp = updater.dispatcher
-
-    # Удаление Webhook перед запуском polling
-    updater.bot.delete_webhook(drop_pending_updates=True)
+    dp = updater.dispatche
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.regex("^📝 Создать чек-лист$"), create_checklist))

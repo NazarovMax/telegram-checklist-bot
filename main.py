@@ -70,6 +70,18 @@ def show_checklists(update: Update, context: CallbackContext):
         update.message.reply_text("Вот твои чек-листы:", reply_markup=reply_markup)
     else:
         update.message.reply_text("У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
+# Редактирование чек-листа
+def edit_checklist(update: Update, context: CallbackContext):
+    user_id = str(update.message.from_user.id)
+    checklists = data.get(user_id, {}).get('checklists', {})
+    
+    if checklists:
+        keyboard = [[InlineKeyboardButton(name, callback_data=f'edit_{name}')] for name in checklists]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text("Выбери чек-лист для редактирования:", reply_markup=reply_markup)
+    else:
+        update.message.reply_text("У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
+
 
 # Создание нового чек-листа
 def create_checklist(update: Update, context: CallbackContext):

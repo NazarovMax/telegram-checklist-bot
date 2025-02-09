@@ -128,6 +128,34 @@ def toggle_task(update: Update, context: CallbackContext):
     
     # Получаем название чек-листа из данных пользователя
     checklist_name = context.user_data.get('current_checklist')
+
+    def edit_task(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+
+    user_id = str(query.from_user.id)
+    checklist_name = context.user_data.get('current_checklist')
+
+    if not checklist_name or checklist_name not in data.get(user_id, {}).get('checklists', {}):
+        query.edit_message_text("Ошибка: чек-лист не найден.")
+        return
+
+    if query.data.startswith('delete_'):
+        task_index = int(query.data.split('_')[1])
+        if 0 <= task_index < len(data[user_id]['checklists'][checklist_name]):
+            del data[user_id]['checklists'][checklist_name][task_index]
+            save_data(data)
+            query.edit_message_text(f"Задача удалена из чек-листа '{checklist_name}'.")
+        else:
+            query.edit_message_text("Ошибка: неверный индекс задачи.")
+
+    elif query.data == 'add_task':
+        context.user_data['adding_task'] = True
+        query.edit_message_text(f"Добавь новую задачу для чек-листа '{checklist_name}'.")
+
+    elif query.data == 'finish_edit':
+        query.edit_message_text(f"Редактирование чек-листа '{checklist_name}' завершено.")
+
     
     # Проверка на существование чек-листа
     if not checklist_name or checklist_name not in data.get(user_id, {}).get('checklists', {}):

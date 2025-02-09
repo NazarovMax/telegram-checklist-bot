@@ -193,6 +193,10 @@ def finish_checklist(update: Update, context: CallbackContext):
         result += f"{status} {task['task']}\n"
     
     query.edit_message_text(result)
+    
+def handle_message(update: Update, context: CallbackContext):
+    user_message = update.message.text
+    update.message.reply_text(f"Ты написал: {user_message}")
 
 
 # Основная функция запуска бота

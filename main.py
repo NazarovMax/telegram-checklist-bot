@@ -5,19 +5,20 @@ from dotenv import load_dotenv
 import os
 import json
 
-# Загружаем переменные окружения
+# Загружаем переменные окружения (нужно только для локальной работы)
 load_dotenv()
 
 print("Скрипт запущен", flush=True)
-bot_token = os.getenv("BOT_TOKEN")
-print(f"Жестко заданный токен: {bot_token}", flush=True)
 
-if not bot_token:
-    print("Ошибка: Токен не найден в .env файле!", flush=True)
-
-import os
+# Получаем токен из переменной окружения
+bot_token = os.getenv('BOT_TOKEN')
 PORT = os.getenv("PORT", 10000)
 
+# Проверяем наличие токена
+if not bot_token:
+    print("Ошибка: Токен не найден в .env файле или переменных окружения!", flush=True)
+else:
+    print(f"Токен успешно загружен: {bot_token}", flush=True)
 
 # Инициализация токена
 updater = Updater(bot_token, use_context=True)

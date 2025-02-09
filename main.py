@@ -71,6 +71,13 @@ def show_checklists(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("У тебя пока нет чек-листов. Нажми \"📝 Создать чек-лист\", чтобы создать.")
 
+# Создание нового чек-листа
+def create_checklist(update: Update, context: CallbackContext):
+    user_id = str(update.message.from_user.id)
+    update.message.reply_text("Как назовем чек-лист?")
+    context.user_data['creating_checklist'] = True
+
+
 # Основная функция запуска бота
 def main():
     dp = updater.dispatcher

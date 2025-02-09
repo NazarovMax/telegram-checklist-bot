@@ -14,6 +14,37 @@ print("Скрипт запущен", flush=True)
 bot_token = os.getenv('BOT_TOKEN')
 PORT = os.getenv("PORT", 10000)
 
+def main():
+    dp = updater.dispatcher
+
+    # Удаление Webhook перед запуском polling
+    updater.bot.delete_webhook(drop_pending_updates=True)
+    
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.regex("^📝 Создать чек-лист$"), create_checklist))
+    dp.add_handler(MessageHandler(Filters.regex("^📋 Мои чек-листы$"), show_checklists))
+    dp.add_handler(MessageHandler(Filters.regex("^✏️ Редактировать чек-лист$"), edit_checklist))
+    dp.add_handler(MessageHandler(Filters.regex("^🗑 Удалить чек-лист$"), delete_checklist))
+    dp.add_handler(CallbackQueryHandler(button, pattern=r'start_.*|edit_.*|delete_.*'))
+    dp.add_handler(CallbackQueryHandler(toggle_task, pattern=r'toggle_.*'))
+    dp.add_handler(CallbackQueryHandler(finish_checklist, pattern=r'finish'))
+    dp.add_handler(CallbackQueryHandler(edit_task, pattern=r'delete_.*|add_task|finish_edit'))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+
+    print("Попытка запуска бота...")
+    try:
+        updater.start_polling()
+        print("Бот запущен и подключён к Telegram API.")
+    except NetworkError as e:
+        print(f"Ошибка сети: {e}")
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+
+    print("Polling завершён.", flush=True)
+
+    updater.idle()
+
+
 # Проверяем наличие токена
 if not bot_token:
     print("Ошибка: Токен не найден в .env файле или переменных окружения!", flush=True)

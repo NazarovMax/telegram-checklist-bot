@@ -44,7 +44,6 @@ def main():
 
     updater.idle()
 
-
 # Проверяем наличие токена
 if not bot_token:
     print("Ошибка: Токен не найден в .env файле или переменных окружения!", flush=True)

@@ -20,12 +20,17 @@ if not bot_token:
 else:
     print(f"Токен успешно загружен: {bot_token}", flush=True)
 
+# Удаляем Webhook перед запуском polling
+bot = Bot(bot_token)
+bot.delete_webhook(drop_pending_updates=True)
+
 # Инициализация токена
 updater = Updater(bot_token, use_context=True)
 
 data_file = 'data.json'
 
 print("Бот начинает polling...", flush=True)
+
 
 # Загрузка данных пользователей
 def load_data():

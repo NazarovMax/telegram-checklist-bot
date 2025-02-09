@@ -15,6 +15,10 @@ print(f"Жестко заданный токен: {bot_token}", flush=True)
 if not bot_token:
     print("Ошибка: Токен не найден в .env файле!", flush=True)
 
+import os
+PORT = os.getenv("PORT", 10000)
+
+
 # Инициализация токена
 updater = Updater(bot_token, use_context=True)
 

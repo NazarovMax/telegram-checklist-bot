@@ -154,6 +154,7 @@ def toggle_task(update: Update, context: CallbackContext):
     elif query.data == 'finish_edit':
         query.edit_message_text(f"Редактирование чек-листа '{checklist_name}' завершено.")
 
+
     
     # Проверка на существование чек-листа
     if not checklist_name or checklist_name not in data.get(user_id, {}).get('checklists', {}):

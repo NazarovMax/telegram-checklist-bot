@@ -145,6 +145,26 @@ def toggle_task(update: Update, context: CallbackContext):
         query.edit_message_text(f"Задача '{checklist[task_index]['task']}' обновлена!")
     else:
         query.edit_message_text("Ошибка: задача не найдена.")
+        
+def finish_checklist(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    
+    user_id = str(query.from_user.id)
+    checklist_name = context.user_data.get('current_checklist')
+    
+    if not checklist_name or checklist_name not in data.get(user_id, {}).get('checklists', {}):
+        query.edit_message_text("Ошибка: чек-лист не найден.")
+        return
+
+    tasks = data[user_id]['checklists'][checklist_name]
+    result = f"✅ Чек-лист '{checklist_name}' завершён!\n\n"
+    
+    for task in tasks:
+        status = "✅" if task['done'] else "❌"
+        result += f"{status} {task['task']}\n"
+    
+    query.edit_message_text(result)
 
 
 # Основная функция запуска бота

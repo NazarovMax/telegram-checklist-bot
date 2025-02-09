@@ -120,6 +120,31 @@ def button(update: Update, context: CallbackContext):
     elif data.startswith('delete_'):
         checklist_name = data.split('_', 1)[1]
         query.edit_message_text(f"Чек-лист '{checklist_name}' удалён.")
+        
+def toggle_task(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = str(query.from_user.id)
+    
+    # Получаем название чек-листа из данных пользователя
+    checklist_name = context.user_data.get('current_checklist')
+    
+    # Проверка на существование чек-листа
+    if not checklist_name or checklist_name not in data.get(user_id, {}).get('checklists', {}):
+        query.edit_message_text("Ошибка: чек-лист не найден.")
+        return
+    
+    # Извлечение индекса задачи из callback_data
+    task_index = int(query.data.split('_')[1])
+    checklist = data[user_id]['checklists'][checklist_name]
+    
+    # Переключение статуса выполнения задачи
+    if 0 <= task_index < len(checklist):
+        checklist[task_index]['done'] = not checklist[task_index]['done']
+        save_data(data)
+        query.edit_message_text(f"Задача '{checklist[task_index]['task']}' обновлена!")
+    else:
+        query.edit_message_text("Ошибка: задача не найдена.")
 
 
 # Основная функция запуска бота

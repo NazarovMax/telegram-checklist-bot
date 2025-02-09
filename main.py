@@ -102,6 +102,24 @@ def create_checklist(update: Update, context: CallbackContext):
     user_id = str(update.message.from_user.id)
     update.message.reply_text("Как назовем чек-лист?")
     context.user_data['creating_checklist'] = True
+    
+def button(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    
+    data = query.data  # Данные из callback_data
+    
+    if data.startswith('start_'):
+        checklist_name = data.split('_', 1)[1]
+        query.edit_message_text(f"Ты выбрал чек-лист: {checklist_name}")
+        
+    elif data.startswith('edit_'):
+        checklist_name = data.split('_', 1)[1]
+        query.edit_message_text(f"Редактирование чек-листа: {checklist_name}")
+        
+    elif data.startswith('delete_'):
+        checklist_name = data.split('_', 1)[1]
+        query.edit_message_text(f"Чек-лист '{checklist_name}' удалён.")
 
 
 # Основная функция запуска бота

@@ -129,7 +129,7 @@ def toggle_task(update: Update, context: CallbackContext):
     # Получаем название чек-листа из данных пользователя
     checklist_name = context.user_data.get('current_checklist')
 
-    def edit_task(update: Update, context: CallbackContext):
+def edit_task(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
 

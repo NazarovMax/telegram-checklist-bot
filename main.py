@@ -65,6 +65,22 @@ def start(update: Update, context: CallbackContext):
         f"Привет, {data[user_id]['name']}! Готов помочь с чек-листами. Выбери команду из меню ниже:",
         reply_markup=reply_markup)
 
+def add_task(update: Update, context: CallbackContext):
+    user_id = str(update.message.from_user.id)
+    checklist_name = context.user_data.get('current_checklist')
+
+    if not checklist_name or checklist_name not in data.get(user_id, {}).get('checklists', {}):
+        update.message.reply_text("Ошибка: чек-лист не найден.")
+        return
+
+    task_text = update.message.text
+    data[user_id]['checklists'][checklist_name].append({'task': task_text, 'done': False})
+    save_data(data)
+
+    update.message.reply_text(f"Задача '{task_text}' добавлена в чек-лист '{checklist_name}'.")
+    context.user_data['adding_task'] = False  # Завершаем добавление задачи
+
+
 # Показать чек-листы пользователя
 def show_checklists(update: Update, context: CallbackContext):
     user_id = str(update.message.from_user.id)
@@ -218,8 +234,8 @@ def handle_message(update: Update, context: CallbackContext):
 
     # Проверка на добавление задачи
     if context.user_data.get('adding_task'):
-        add_task(update, context)
-        return
+    add_task(update, context)
+    return
 
     # Если бот не в режиме создания чек-листа или добавления задач
     update.message.reply_text(f"Ты написал: {text}")
